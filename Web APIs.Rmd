@@ -1,0 +1,71 @@
+---
+title: "Web APIs Assignment"
+author: "MD Asadul Islam"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(stringr)
+library(httr)
+library(jsonlite)
+library(tidyr)
+```
+
+### Fetch list of Best-Seller Lists
+
+```{r code-chunk-label}
+# Function to get available bestseller lists
+get_bestseller_lists <- function(api_key) {
+  url <- "https://api.nytimes.com/svc/books/v3/lists/names.json"
+  response <- GET(url, query = list(`api-key` = api_key))
+  
+  if (status_code(response) == 200) {
+    content <- content(response, as = "text", encoding = "UTF-8")
+    json_data <- fromJSON(content, flatten = TRUE)
+    return(json_data)
+  } else {
+    stop("Failed to retrieve data: ", status_code(response))
+  }
+}
+
+# Main script to fetch available lists
+api_key <- "3HBRyFbHvSlg603mr4GkwIn6uhdd241f"
+lists_json_data <- get_bestseller_lists(api_key)
+lists_df <- as.data.frame(lists_json_data$results)
+
+# Display the available bestseller lists
+print(lists_df)
+
+```
+
+### Fetch Books from a specific List
+
+```{r code chunk for display}
+# Function to get books from a specific bestseller list
+get_bestseller_books <- function(api_key, list_name, date) {
+  bestseller_url <- paste0("https://api.nytimes.com/svc/books/v3/lists/", date, "/", list_name, ".json")
+  response <- GET(bestseller_url, query = list(`api-key` = api_key, `list` = list_name))
+  
+  if (status_code(response) == 200) {
+    content <- content(response, as = "text", encoding = "UTF-8")
+    json_data <- fromJSON(content, flatten = TRUE)
+    return(json_data)
+  } else {
+    stop("Failed to retrieve data: ", status_code(response))
+  }
+}
+
+# Main script to fetch books from a specific list
+list_name <- "hardcover-fiction"
+date <- Sys.Date() - 7
+books_json_data <- get_bestseller_books(api_key, list_name, date)
+books_df <- as.data.frame(books_json_data$results$books)
+
+# Display the bestseller books
+print(books_df)
+
+```
+
+...
+
